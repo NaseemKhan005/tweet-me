@@ -1,6 +1,16 @@
+import User from "../models/userModel.js";
+import createError from "../helpers/createError.js";
+
 export const getUserProfile = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "Get user profile." });
+    const { username } = req.params;
+
+    const user = await User.findOne({ username }).select("-password");
+    if (!user) return next(createError(404, "User not found."));
+
+    res
+      .status(200)
+      .json({ message: "User Profile Fetched Successfully.", user });
   } catch (error) {
     next(error);
   }

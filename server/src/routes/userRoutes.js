@@ -8,7 +8,7 @@ import {
 } from "../controllers/userController.js";
 const router = express.Router();
 
-router.get("/profile/:useranme", verifyToken, getUserProfile);
+router.get("/profile/:username", verifyToken, getUserProfile);
 router.get("/suggested", verifyToken, getSuggestedUsers);
 router.put("/update/:id", verifyUser, updateUserProfile);
 router.post("/follow/:id", verifyUser, followUnfollowUser);
