@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 
 import createError from "../helpers/createError.js";
 import User from "../models/userModel.js";
+import generateToken from "../helpers/generateToken.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -31,6 +32,7 @@ export const register = async (req, res, next) => {
     });
 
     const { password: userPassword, ...userInfo } = user._doc;
+    generateToken(user._id, res);
 
     res
       .status(201)
