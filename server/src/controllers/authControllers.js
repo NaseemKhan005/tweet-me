@@ -67,7 +67,10 @@ export const login = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.status(200).json("Logout route");
+    res
+      .clearCookie("token", { maxAge: 0 })
+      .status(200)
+      .json({ message: "Logout successful." });
   } catch (error) {
     next(error);
   }
