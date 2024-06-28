@@ -1,23 +1,23 @@
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
     res.status(200).json("Register route");
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     res.status(200).json("Login route");
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-export const logout = async (req, res) => {
+export const logout = async (req, res, next) => {
   try {
     res.status(200).json("Logout route");
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
