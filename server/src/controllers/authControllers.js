@@ -44,7 +44,22 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    res.status(200).json("Login route");
+    const { username, password } = req.body;
+
+    if (!username || !password)
+      return next(createError(400, "Please fill in all fields."));
+
+    const user = await User.findOne({ username });
+    if (!user) return next(createError(400, "Invalid username or password."));
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect)
+      return next(createError(400, "Invalid username or password."));
+
+    const { password: userPassword, ...userInfo } = user._doc;
+    generateToken(user._id, res);
+
+    res.status(200).json({ message: "Login successful.", user: userInfo });
   } catch (error) {
     next(error);
   }
