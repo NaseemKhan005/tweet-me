@@ -2,8 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-import authRoutes from "./routes/authRoutes.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
   res.send("<h1>Server is running...</h1>");
 });
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // Error handler
 app.use(errorHandler);

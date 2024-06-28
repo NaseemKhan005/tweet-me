@@ -4,7 +4,7 @@ import {
   logout,
   register,
   getMe,
-} from "../controllers/authControllers.js";
+} from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
