@@ -19,7 +19,15 @@ export const getUserProfile = async (req, res, next) => {
 
 export const getSuggestedUsers = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "Get suggested users." });
+    const { userId } = req.user;
+    const usersFollowedByMe = await User.findById(userId).select("following");
+    const suggestedUsers = await User.find({
+      _id: { $nin: [...usersFollowedByMe.following, userId] },
+    }).select("username profilePic");
+
+    res
+      .status(200)
+      .json({ message: "Suggested Users Fetched.", suggestedUsers });
   } catch (error) {
     next(error);
   }
