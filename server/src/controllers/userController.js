@@ -156,7 +156,10 @@ export const followUnfollowUser = async (req, res, next) => {
         content: `${currentUser.username} unfollowed you.`,
       });
 
-      res.status(200).json({ notification });
+      res.status(200).json({
+        message: `You unfollowed ${userToFollow.username}`,
+        notification,
+      });
     } else {
       // Follow the user
       userToFollow.followers.push(currentUser._id);
@@ -170,7 +173,10 @@ export const followUnfollowUser = async (req, res, next) => {
         content: `${currentUser.username} followed you.`,
       });
 
-      res.status(200).json({ notification });
+      res.status(200).json({
+        message: `You are now following ${userToFollow.username}`,
+        notification,
+      });
     }
     await currentUser.save();
     await userToFollow.save();

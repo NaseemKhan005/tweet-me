@@ -1,7 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 
 import Post from "../models/postModel.js";
+import Notification from "../models/notificationModel.js";
 import createError from "../helpers/createError.js";
+import User from "../models/userModel.js";
 
 export const createNewPost = async (req, res, next) => {
   try {
@@ -73,7 +75,50 @@ export const getAllPosts = async (req, res, next) => {
 
 export const likeUnlikePost = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "Post liked/unliked successfully" });
+    const { id } = req.params;
+    const { userId } = req.user;
+
+    const post = await Post.findById(id).populate(
+      "user",
+      "username profilePicture"
+    );
+    if (!post) return next(createError(404, "Post not found"));
+
+    const isLiked = post.likes.includes(userId);
+
+    if (isLiked) {
+      post.likes.pull(userId);
+      await post.save();
+
+      const notification = new Notification({
+        from: userId,
+        to: post.user,
+        type: "like",
+        content: `${post.user.username} unliked your post.`,
+      });
+
+      await notification.save();
+      res.status(200).json({
+        message: "Post unliked successfully",
+        notification,
+      });
+    } else {
+      post.likes.push(userId);
+      await post.save();
+
+      const notification = new Notification({
+        from: userId,
+        to: post.user,
+        type: "like",
+        content: `${post.user.username} liked your post.`,
+      });
+
+      await notification.save();
+      res.status(200).json({
+        message: "Post unliked successfully",
+        notification,
+      });
+    }
   } catch (error) {
     next(error);
   }
