@@ -81,6 +81,16 @@ export const likeUnlikePost = async (req, res, next) => {
 
 export const commentOnPost = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    const post = await Post.findById(id);
+    if (!post) return next(createError(404, "Post not found"));
+
+    if (!text) return next(createError(400, "Comment text is required"));
+    post.comments.push({ user: req.user.userId, text });
+    await post.save();
+
     res.status(200).json({ message: "Comment added successfully" });
   } catch (error) {
     next(error);
