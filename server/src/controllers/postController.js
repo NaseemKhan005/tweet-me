@@ -67,7 +67,7 @@ export const getAllPosts = async (req, res, next) => {
   try {
     const posts = await Post.find()
       .sort({ createdAt: -1 })
-      .populate("user", "username profilePicture");
+      .populate("user", "username profilePicture fullName");
 
     if (posts.length === 0) {
       return res.status(200).json({ message: "No posts found", posts: [] });
@@ -83,13 +83,47 @@ export const getSinglePost = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const post = await Post.findById(id).populate(
-      "user",
-      "username profilePicture"
-    );
+    const post = await Post.findById(id).populate({
+      path: "user",
+      select: "-password",
+    });
     if (!post) return next(createError(404, "Post not found"));
 
     res.status(200).json({ message: "Post fetched successfully", post });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// get all likedPosts that the loggedin user have
+export const getLikedPosts = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) return next(createError(404, "User not found"));
+
+    const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+
+    if (likedPosts.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "You don't have liked any post.", likedPosts: [] });
+    }
+
+    res.status(200).json({
+      message: "Liked posts fetched successfully",
+      posts: likedPosts,
+    });
   } catch (error) {
     next(error);
   }
@@ -100,10 +134,10 @@ export const likeUnlikePost = async (req, res, next) => {
     const { id } = req.params;
     const { userId } = req.user;
 
-    const post = await Post.findById(id).populate(
-      "user",
-      "username profilePicture"
-    );
+    const post = await Post.findById(id).populate({
+      path: "user",
+      select: "-password",
+    });
     if (!post) return next(createError(404, "Post not found"));
 
     const isLiked = post.likes.includes(userId);
@@ -111,6 +145,10 @@ export const likeUnlikePost = async (req, res, next) => {
     if (isLiked) {
       post.likes.pull(userId);
       await post.save();
+
+      await User.findByIdAndUpdate(userId, {
+        $pull: { likedPosts: id },
+      });
 
       const notification = new Notification({
         from: userId,
@@ -128,6 +166,10 @@ export const likeUnlikePost = async (req, res, next) => {
       post.likes.push(userId);
       await post.save();
 
+      await User.findByIdAndUpdate(userId, {
+        $push: { likedPosts: id },
+      });
+
       const notification = new Notification({
         from: userId,
         to: post.user,
@@ -137,7 +179,7 @@ export const likeUnlikePost = async (req, res, next) => {
 
       await notification.save();
       res.status(200).json({
-        message: "Post unliked successfully",
+        message: "Post liked successfully",
         notification,
       });
     }
