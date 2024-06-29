@@ -1,3 +1,6 @@
+import bcrypt from "bcrypt";
+import { v2 as cloudinary } from "cloudinary";
+
 import User from "../models/userModel.js";
 import Notification from "../models/notificationModel.js";
 import createError from "../helpers/createError.js";
@@ -35,7 +38,93 @@ export const getSuggestedUsers = async (req, res, next) => {
 
 export const updateUserProfile = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "Update user profile." });
+    const {
+      username,
+      fullName,
+      email,
+      bio,
+      link,
+      currentPassword,
+      newPassword,
+    } = req.body;
+    let { profilePicture, coverPicture } = req.body;
+
+    let user = await User.findById(req.user.userId).select("-password");
+    if (!user) return next(createError(404, "User not found."));
+
+    if ((currentPassword && !newPassword) || (!currentPassword && newPassword))
+      return next(
+        createError(400, "Please provide both current and new password.")
+      );
+
+    if (currentPassword && newPassword) {
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+      if (!isPasswordValid)
+        return next(createError(400, "Current password is incorrect."));
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    if (profilePicture) {
+      if (user.profilePicture) {
+        const publicId = user.profilePicture.match(/[^/]*$/)[0].split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      const uploadResult = await cloudinary.uploader
+        .upload(profilePicture)
+        .catch((error) => {
+          next(createError(400, "Profile Picture upload failed."));
+        });
+
+      profilePicture = uploadResult.secure_url;
+    }
+
+    if (coverPicture) {
+      if (user.coverPicture) {
+        const publicId = user.coverPicture.match(/[^/]*$/)[0].split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      const uploadResult = await cloudinary.uploader
+        .upload(coverPicture)
+        .catch((error) => {
+          next(createError(400, "Cover Image upload failed."));
+        });
+
+      coverPicture = uploadResult.secure_url;
+    }
+
+    if (username) {
+      const isUsernameTaken = await User.findOne({ username });
+      if (isUsernameTaken) return next(createError(400, "Username is taken."));
+
+      user.username = username || user.username;
+    }
+
+    if (email) {
+      const isEmailAlreadyRegistered = await User.findOne({ email });
+      if (isEmailAlreadyRegistered)
+        return next(createError(400, "Email is already registered."));
+
+      user.email = email || user.email;
+    }
+
+    user.username = username || user.username;
+    user.email = email || user.email;
+    user.fullName = fullName || user.fullName;
+    user.bio = bio || user.bio;
+    user.link = link || user.link;
+    user.profilePic = profilePicture || user.profilePic;
+    user.coverPic = coverPicture || user.coverPic;
+
+    user = await user.save();
+
+    res.status(200).json({ message: "Profile Updated Successfully.", user });
   } catch (error) {
     next(error);
   }
