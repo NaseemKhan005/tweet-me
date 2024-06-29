@@ -63,7 +63,9 @@ export const deletePost = async (req, res, next) => {
 
 export const getAllPosts = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "All posts fetched successfully" });
+    const posts = await Post.find().populate("user", "username profilePicture");
+
+    res.status(200).json({ message: "All posts fetched successfully", posts });
   } catch (error) {
     next(error);
   }
