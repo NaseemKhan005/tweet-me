@@ -65,9 +65,31 @@ export const deletePost = async (req, res, next) => {
 
 export const getAllPosts = async (req, res, next) => {
   try {
-    const posts = await Post.find().populate("user", "username profilePicture");
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "username profilePicture");
+
+    if (posts.length === 0) {
+      return res.status(200).json({ message: "No posts found", posts: [] });
+    }
 
     res.status(200).json({ message: "All posts fetched successfully", posts });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSinglePost = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const post = await Post.findById(id).populate(
+      "user",
+      "username profilePicture"
+    );
+    if (!post) return next(createError(404, "Post not found"));
+
+    res.status(200).json({ message: "Post fetched successfully", post });
   } catch (error) {
     next(error);
   }
