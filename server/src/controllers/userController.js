@@ -34,7 +34,38 @@ export const updateUserProfile = async (req, res, next) => {
 
 export const followUnfollowUser = async (req, res, next) => {
   try {
-    res.status(200).json({ message: "Follow or unfollow user." });
+    const currentUser = await User.findById(req.user.userId);
+    const userToFollow = await User.findById(req.params.id);
+
+    if (!currentUser || !userToFollow)
+      return next(createError(404, "User not found."));
+
+    if (req.params.id === req.user.userId)
+      return next(createError(400, "You can't follow yourself."));
+
+    const isFollowing = currentUser.following.includes(userToFollow._id);
+
+    if (isFollowing) {
+      // Unfollow the user
+      userToFollow.followers.pull(currentUser._id);
+      currentUser.following.pull(userToFollow._id);
+
+      res.status(200).json({
+        message: `You have unfollowed ${userToFollow.username}.`,
+        currentUser,
+      });
+    } else {
+      // Follow the user
+      userToFollow.followers.push(currentUser._id);
+      currentUser.following.push(userToFollow._id);
+
+      res.status(200).json({
+        message: `You are now following ${userToFollow.username}.`,
+        currentUser,
+      });
+    }
+    await currentUser.save();
+    await userToFollow.save();
   } catch (error) {
     next(error);
   }
