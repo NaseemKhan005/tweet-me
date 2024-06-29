@@ -95,7 +95,39 @@ export const getSinglePost = async (req, res, next) => {
   }
 };
 
-// get all likedPosts that the loggedin user have
+export const getFollowingPosts = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) return next(createError(404, "User not found"));
+
+    const followingPosts = await Post.find({
+      user: { $in: user.following },
+    })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+
+    if (followingPosts.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No posts found from the users you follow." });
+    }
+
+    res.status(200).json({
+      message: "Following posts fetched successfully",
+      posts: followingPosts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getLikedPosts = async (req, res, next) => {
   try {
     const userId = req.params.id;

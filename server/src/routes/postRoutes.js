@@ -7,6 +7,7 @@ import {
   likeUnlikePost,
   commentOnPost,
   getLikedPosts,
+  getFollowingPosts,
 } from "../controllers/postController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 const router = express.Router();
@@ -14,6 +15,7 @@ const router = express.Router();
 router.get("/", verifyToken, getAllPosts);
 router.get("/:id", verifyToken, getSinglePost);
 router.get("/liked-posts/:id", verifyToken, getLikedPosts);
+router.get("/following", verifyToken, getFollowingPosts);
 router.post("/", verifyToken, createNewPost);
 router.post("/like/:id", verifyToken, likeUnlikePost);
 router.post("/comment/:id", verifyToken, commentOnPost);
