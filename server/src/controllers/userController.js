@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import Notification from "../models/notificationModel.js";
 import createError from "../helpers/createError.js";
 
 export const getUserProfile = async (req, res, next) => {
@@ -50,19 +51,29 @@ export const followUnfollowUser = async (req, res, next) => {
       userToFollow.followers.pull(currentUser._id);
       currentUser.following.pull(userToFollow._id);
 
-      res.status(200).json({
-        message: `You have unfollowed ${userToFollow.username}.`,
-        currentUser,
+      const notification = await Notification.create({
+        from: currentUser._id,
+        to: userToFollow._id,
+        type: "follow",
+        read: false,
+        content: `${currentUser.username} unfollowed you.`,
       });
+
+      res.status(200).json({ notification });
     } else {
       // Follow the user
       userToFollow.followers.push(currentUser._id);
       currentUser.following.push(userToFollow._id);
 
-      res.status(200).json({
-        message: `You are now following ${userToFollow.username}.`,
-        currentUser,
+      const notification = await Notification.create({
+        from: currentUser._id,
+        to: userToFollow._id,
+        type: "follow",
+        read: false,
+        content: `${currentUser.username} followed you.`,
       });
+
+      res.status(200).json({ notification });
     }
     await currentUser.save();
     await userToFollow.save();
