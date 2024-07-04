@@ -128,6 +128,38 @@ export const getFollowingPosts = async (req, res, next) => {
   }
 };
 
+export const getAuthUserPosts = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOne({ username });
+    if (!user) return next(createError(404, "User not found!"));
+
+    const posts = await Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+      
+    if (posts?.length === 0)
+      return res
+        .status(200)
+        .json({ message: "You didn't created any posts yet!" });
+
+    res.status(200).json({
+      message: "Authenticated User Posts Fetched Successfully!",
+      posts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getLikedPosts = async (req, res, next) => {
   try {
     const userId = req.params.id;
