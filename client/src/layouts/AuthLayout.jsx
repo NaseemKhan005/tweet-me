@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 
 const AuthLayout = () => {
   return (
-    <div>
+    <div className="max-w-screen-xl mx-auto flex h-screen">
       <Outlet />
     </div>
   );
