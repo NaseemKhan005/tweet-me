@@ -18,13 +18,3 @@ export const verifyToken = async (req, res, next) => {
     next(error);
   }
 };
-
-export const verifyUser = async (req, res, next) => {
-  verifyToken(req, res, () => {
-    if (req.user.userId !== req.params.id)
-      return next(
-        createError(403, "You are not allowed to perform this action.")
-      );
-    next();
-  });
-};

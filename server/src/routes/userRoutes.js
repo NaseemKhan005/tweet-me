@@ -1,5 +1,5 @@
 import express from "express";
-import { verifyToken, verifyUser } from "../middlewares/authMiddleware.js";
+import { verifyToken } from "../middlewares/authMiddleware.js";
 import {
   getUserProfile,
   getSuggestedUsers,
