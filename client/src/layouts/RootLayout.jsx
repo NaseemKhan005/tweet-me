@@ -1,12 +1,14 @@
 import { Outlet } from "react-router-dom";
 
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/common/Sidebar";
+import RightPanel from "../components/common/RightPanel";
 
 const RootLayout = () => {
   return (
-    <div>
-      <Navbar />
+    <div className="flex items-start justify-between w-full">
+      <Sidebar />
       <Outlet />
+      <RightPanel/>
     </div>
   );
 };
