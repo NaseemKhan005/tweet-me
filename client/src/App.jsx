@@ -6,6 +6,7 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import RootLayout from "./layouts/RootLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import NotificationPage from "./pages/notification/NotificationPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path="/" element={<RootLayout />}>
           <Route index element={<HomePage />} />
           <Route path="notifications" element={<NotificationPage />} />
+          <Route path="profile/:username" element={<ProfilePage />} />
         </Route>
 
         <Route path="/auth" element={<AuthLayout />}>
