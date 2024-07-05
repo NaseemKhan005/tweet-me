@@ -34,7 +34,7 @@ const LoginPage = () => {
         });
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error);
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
       } catch (error) {
         throw error.message;
       }
