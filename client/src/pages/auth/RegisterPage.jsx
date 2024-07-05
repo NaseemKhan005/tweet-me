@@ -34,6 +34,7 @@ const RegisterPage = () => {
           `${import.meta.env.VITE_BASE_URL}/auth/register`,
           {
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },

@@ -1,27 +1,62 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import XSvg from "../../components/svgs/X";
 
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
+import { TbLoader2 } from "react-icons/tb";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
+  const {
+    mutate: handleLogin,
+    isError,
+    error,
+    isPending,
+  } = useMutation({
+    mutationFn: async ({ username, password }) => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}/auth/login`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onSuccess: () => {
+      setFormData({
+        username: "",
+        password: "",
+      });
+      toast.success("Login Successful");
+      navigate("/");
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
+    handleLogin(formData);
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const isError = false;
 
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen px-5">
@@ -64,10 +99,16 @@ const LoginPage = () => {
             </label>
           </div>
 
-          <button className="btn rounded-full btn-primary text-white">
-            Sign up
+          <button
+            disabled={isPending}
+            className="btn rounded-full btn-primary text-white disabled:bg-primary disabled:text-white disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isPending && (
+              <TbLoader2 className="text-xl text-white animate-spin mt-1" />
+            )}
+            {isPending ? "Loading..." : "Sign In"}
           </button>
-          {isError && <p className="text-red-500">Something went wrong</p>}
+          {isError && <p className="text-red-500">{error}</p>}
         </form>
 
         <div className="flex flex-col lg:w-2/3 gap-2 mt-4">
