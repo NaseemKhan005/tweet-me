@@ -6,6 +6,7 @@ const _config = {
   mongoUri: process.env.MONGO_URI,
   env: process.env.NODE_ENV,
   jwtSecret: process.env.JWT_SECRET,
+  clientUrl: process.env.CLIENT_URL,
   cloudinaryName: process.env.CLOUDINARY_NAME,
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,

@@ -1,14 +1,20 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import XSvg from "../../components/svgs/X";
 
-import { MdOutlineMail } from "react-icons/md";
+import { useMutation } from "@tanstack/react-query";
 import { FaUser } from "react-icons/fa";
-import { MdPassword } from "react-icons/md";
-import { MdDriveFileRenameOutline } from "react-icons/md";
+import {
+  MdDriveFileRenameOutline,
+  MdOutlineMail,
+  MdPassword,
+} from "react-icons/md";
+import { TbLoader2 } from "react-icons/tb";
+import toast from "react-hot-toast";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -16,16 +22,51 @@ const RegisterPage = () => {
     password: "",
   });
 
+  const {
+    mutate: handleMutation,
+    isError,
+    error,
+    isPending,
+  } = useMutation({
+    mutationFn: async ({ email, username, fullName, password }) => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/auth/register`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, username, fullName, password }),
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onSuccess: () => {
+      setFormData({
+        email: "",
+        username: "",
+        fullName: "",
+        password: "",
+      });
+      toast.success("Registration Successful");
+      navigate("/");
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
+    handleMutation(formData);
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const isError = false;
 
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen px-5">
@@ -50,6 +91,7 @@ const RegisterPage = () => {
               value={formData.email}
             />
           </label>
+
           <div className="flex gap-4 flex-wrap">
             <label className="input input-bordered rounded flex items-center gap-2 flex-1">
               <FaUser />
@@ -74,6 +116,7 @@ const RegisterPage = () => {
               />
             </label>
           </div>
+
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdPassword />
             <input
@@ -85,11 +128,19 @@ const RegisterPage = () => {
               value={formData.password}
             />
           </label>
-          <button className="btn rounded-full btn-primary text-white">
-            Sign up
+
+          <button
+            disabled={isPending}
+            className="btn rounded-full btn-primary text-white disabled:bg-primary disabled:text-white disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isPending && (
+              <TbLoader2 className="text-xl text-white animate-spin mt-1" />
+            )}
+            {isPending ? "Loading..." : "Sign Up"}
           </button>
-          {isError && <p className="text-red-500">Something went wrong</p>}
+          {isError && <p className="text-red-500">{error}</p>}
         </form>
+
         <div className="flex flex-col lg:w-2/3 gap-2 mt-4">
           <p className="text-white text-lg">Already have an account?</p>
           <Link to="/auth/login">

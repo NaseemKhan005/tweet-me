@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import HomePage from "./pages/home/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -11,6 +12,8 @@ import ProfilePage from "./pages/profile/ProfilePage";
 const App = () => {
   return (
     <div className="flex max-w-6xl mx-auto">
+      <Toaster />
+
       <Routes>
         <Route path="/" element={<RootLayout />}>
           <Route index element={<HomePage />} />
