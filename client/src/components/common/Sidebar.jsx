@@ -3,10 +3,36 @@ import XSvg from "../svgs/X";
 import { MdHomeFilled } from "react-icons/md";
 import { IoNotifications } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BiLogOut } from "react-icons/bi";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  const { mutate: handleLogout } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/auth/logout`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Logout Successful");
+      navigate("/auth/login");
+    },
+  });
+
   const data = {
     fullName: "John Doe",
     username: "johndoe",
@@ -59,14 +85,20 @@ const Sidebar = () => {
                 <img src={data?.profileImg || "/avatar-placeholder.png"} />
               </div>
             </div>
-            <div className="flex justify-between flex-1">
+            <div className="flex items-center justify-between flex-1">
               <div className="hidden md:block">
                 <p className="text-white font-bold text-sm w-20 truncate">
                   {data?.fullName}
                 </p>
                 <p className="text-slate-500 text-sm">@{data?.username}</p>
               </div>
-              <BiLogOut className="w-5 h-5 cursor-pointer" />
+              <BiLogOut
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLogout();
+                }}
+                className="w-5 h-5 cursor-pointer"
+              />
             </div>
           </Link>
         )}
