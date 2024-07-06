@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import XSvg from "../../components/svgs/X";
 
 import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { FaUser } from "react-icons/fa";
 import {
   MdDriveFileRenameOutline,
@@ -11,10 +12,8 @@ import {
   MdPassword,
 } from "react-icons/md";
 import { TbLoader2 } from "react-icons/tb";
-import toast from "react-hot-toast";
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -56,7 +55,6 @@ const RegisterPage = () => {
         password: "",
       });
       toast.success("Registration Successful");
-      navigate("/");
     },
   });
 

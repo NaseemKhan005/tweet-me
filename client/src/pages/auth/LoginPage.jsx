@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import XSvg from "../../components/svgs/X";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { TbLoader2 } from "react-icons/tb";
 
 const LoginPage = () => {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -45,7 +45,7 @@ const LoginPage = () => {
         password: "",
       });
       toast.success("Login Successful");
-      navigate("/");
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 

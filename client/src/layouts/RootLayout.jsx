@@ -8,7 +8,7 @@ const RootLayout = () => {
     <div className="flex items-start justify-between w-full">
       <Sidebar />
       <Outlet />
-      <RightPanel/>
+      <RightPanel />
     </div>
   );
 };
