@@ -1,6 +1,6 @@
 import XSvg from "../svgs/X";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { BiLogOut } from "react-icons/bi";
 import { FaUser } from "react-icons/fa";
@@ -10,6 +10,8 @@ import { Link } from "react-router-dom";
 
 const Sidebar = () => {
   const queryClient = useQueryClient();
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+
   const { mutate: handleLogout } = useMutation({
     mutationFn: async () => {
       try {
@@ -34,12 +36,6 @@ const Sidebar = () => {
       toast.error("Logout failed");
     },
   });
-
-  const data = {
-    fullName: "John Doe",
-    username: "johndoe",
-    profileImg: "/avatars/boy1.png",
-  };
 
   return (
     <div className="md:flex-[2_2_0] w-18 max-w-52 sticky top-0">
@@ -69,7 +65,7 @@ const Sidebar = () => {
 
           <li className="flex justify-center md:justify-start">
             <Link
-              to={`/profile/${data?.username}`}
+              to={`/profile/${authUser?.user?.username}`}
               className="flex gap-3 items-center hover:bg-stone-900 transition-all rounded-full duration-300 py-2 pl-2 pr-4 max-w-fit cursor-pointer"
             >
               <FaUser className="w-6 h-6" />
@@ -77,22 +73,29 @@ const Sidebar = () => {
             </Link>
           </li>
         </ul>
-        {data && (
+
+        {authUser && (
           <Link
-            to={`/profile/${data.username}`}
+            to={`/profile/${authUser.username}`}
             className="mt-auto mb-10 flex gap-2 items-start transition-all duration-300 hover:bg-[#181818] py-2 px-4 rounded-full"
           >
             <div className="avatar hidden md:inline-flex">
-              <div className="w-8 rounded-full">
-                <img src={data?.profileImg || "/avatar-placeholder.png"} />
+              <div className="w-8 rounded-full flex items-center justify-center">
+                {authUser?.user?.profileImg ? (
+                  <img src={authUser?.user?.profileImg} alt="user" />
+                ) : (
+                  <FaUser className="text-xl mt-1.5 ml-1" />
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between flex-1">
               <div className="hidden md:block">
                 <p className="text-white font-bold text-sm w-20 truncate">
-                  {data?.fullName}
+                  {authUser?.user?.fullName}
                 </p>
-                <p className="text-slate-500 text-sm">@{data?.username}</p>
+                <p className="text-slate-500 text-sm w-20 truncate">
+                  @{authUser?.user?.username}
+                </p>
               </div>
               <BiLogOut
                 onClick={(e) => {
