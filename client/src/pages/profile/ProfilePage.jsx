@@ -55,7 +55,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     refetch();
-  }, [username, refetch]);
+  }, [username, feedType, refetch]);
 
   const { formattedDate } = convertDate(data?.user?.createdAt);
 
@@ -105,9 +105,13 @@ const ProfilePage = () => {
                 ) : (
                   <div className="flex items-center justify-center flex-col gap-5 mb-5 text-neutral-500">
                     <GrGallery className="text-5xl" />
-                    <p>
-                      No cover image found. Click here to upload a cover image
-                    </p>
+                    {isMyProfile ? (
+                      <p>
+                        No cover image found. Click here to upload a cover image
+                      </p>
+                    ) : (
+                      <p>No cover image found.</p>
+                    )}
                   </div>
                 )}
 
@@ -120,18 +124,22 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                <input
-                  type="file"
-                  ref={coverImgRef}
-                  onChange={(e) => handleImgChange(e, "coverImg")}
-                  className="cursor-pointer absolute opacity-0 top-0 left-0 w-full h-full"
-                />
-                <input
-                  type="file"
-                  hidden
-                  ref={profileImgRef}
-                  onChange={(e) => handleImgChange(e, "profileImg")}
-                />
+                {isMyProfile && (
+                  <>
+                    <input
+                      type="file"
+                      ref={coverImgRef}
+                      onChange={(e) => handleImgChange(e, "coverImg")}
+                      className="cursor-pointer absolute opacity-0 top-0 left-0 w-full h-full"
+                    />
+                    <input
+                      type="file"
+                      hidden
+                      ref={profileImgRef}
+                      onChange={(e) => handleImgChange(e, "profileImg")}
+                    />
+                  </>
+                )}
 
                 {/* USER AVATAR */}
                 <div className="avatar absolute -bottom-16 left-4">
@@ -148,14 +156,14 @@ const ProfilePage = () => {
                       <FaUser className="text-7xl text-neutral-300" />
                     )}
 
-                    <div className="absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer">
-                      {isMyProfile && (
+                    {isMyProfile && (
+                      <div className="absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer">
                         <MdEdit
                           className="w-4 h-4 text-white"
                           onClick={() => profileImgRef.current.click()}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </span>
                 </div>
               </div>
