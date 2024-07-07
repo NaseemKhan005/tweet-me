@@ -12,17 +12,16 @@ import convertDate from "../../utils/convertDate";
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
 
-  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const postOwner = post.user;
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const isMyPost = authUser?.user?._id === postOwner._id;
 
   const isLiked = post.likes.includes(authUser?.user?._id);
 
   const { formattedTime } = convertDate(post.createdAt);
 
-  const isCommenting = true;
-
   const queryClient = useQueryClient();
+
   const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
@@ -82,12 +81,49 @@ const Post = ({ post }) => {
     },
   });
 
+  const { mutate: commentPostMutation, isPending: isCommenting } = useMutation({
+    mutationFn: async (comment) => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/posts/comment/${post._id}`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: comment }),
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onSuccess: () => {
+      setComment("");
+      toast.success("Comment posted successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleDeletePost = () => {
     deleteMutation();
   };
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (isCommenting) return;
+    if (!comment.length) return;
+
+    commentPostMutation(comment);
   };
 
   const handleLikePost = () => {
