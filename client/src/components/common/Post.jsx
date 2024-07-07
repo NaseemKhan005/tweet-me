@@ -16,14 +16,14 @@ const Post = ({ post }) => {
   const postOwner = post.user;
   const isMyPost = authUser?.user?._id === postOwner._id;
 
-  const isLiked = false;
+  const isLiked = post.likes.includes(authUser?.user?._id);
 
   const { formattedTime } = convertDate(post.createdAt);
 
-  const isCommenting = false;
+  const isCommenting = true;
 
   const queryClient = useQueryClient();
-  const { mutate: deleteMutation, isPending } = useMutation({
+  const { mutate: deleteMutation, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
         const res = await fetch(
@@ -47,6 +47,41 @@ const Post = ({ post }) => {
     },
   });
 
+  const { mutate: likePostMutation, isPending: isLiking } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/posts/like/${post?._id}`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onSuccess: (updatedLikes) => {
+      queryClient.setQueryData(["posts"], (oldData) => {
+        return oldData.map((oldPost) => {
+          if (oldPost._id === post._id) {
+            return { ...oldPost, likes: updatedLikes };
+          }
+
+          return oldPost;
+        });
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleDeletePost = () => {
     deleteMutation();
   };
@@ -55,7 +90,10 @@ const Post = ({ post }) => {
     e.preventDefault();
   };
 
-  const handleLikePost = () => {};
+  const handleLikePost = () => {
+    if (isLiking) return;
+    likePostMutation();
+  };
 
   return (
     <>
@@ -90,7 +128,7 @@ const Post = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex items-center justify-end flex-1">
-                {isPending ? (
+                {isDeleting ? (
                   <LoadingSpinner size="sm" />
                 ) : (
                   <FaTrash
@@ -175,11 +213,7 @@ const Post = ({ post }) => {
                       onChange={(e) => setComment(e.target.value)}
                     />
                     <button className="btn btn-primary rounded-full btn-sm text-white px-4">
-                      {isCommenting ? (
-                        <span className="loading loading-spinner loading-md"></span>
-                      ) : (
-                        "Post"
-                      )}
+                      {isCommenting ? <LoadingSpinner size="sm" /> : "Post"}
                     </button>
                   </form>
                 </div>
@@ -197,19 +231,20 @@ const Post = ({ post }) => {
                 className="flex gap-1 items-center group cursor-pointer"
                 onClick={handleLikePost}
               >
-                {!isLiked && (
+                {!isLiked && !isLiking && (
                   <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
                 )}
-                {isLiked && (
+                {isLiked && !isLiking && (
                   <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500 " />
                 )}
+                {isLiking && <LoadingSpinner size="sm" />}
 
                 <span
-                  className={`text-sm text-slate-500 group-hover:text-pink-500 ${
-                    isLiked ? "text-pink-500" : ""
+                  className={`text-sm group-hover:text-pink-500 ${
+                    isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
-                  {post?.likes?.length}
+                  {!isLiking && post?.likes?.length}
                 </span>
               </div>
             </div>
