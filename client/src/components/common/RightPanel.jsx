@@ -2,8 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
 import { FaUser } from "react-icons/fa";
+import useFollow from "../../hooks/useFollow";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 const RightPanel = () => {
+  const { follow, isPending: isFollowing } = useFollow();
+
   const { data: suggestedUsers, isPending } = useQuery({
     queryKey: ["suggestedUsers"],
     queryFn: async () => {
@@ -25,13 +29,11 @@ const RightPanel = () => {
     },
   });
 
-  console.log(suggestedUsers);
-
   return (
     <div className="hidden lg:block my-4 mx-2 sticky top-4">
       <div className="bg-[#16181C] p-4 rounded-md">
         <p className="font-bold">Who to follow</p>
-        <div className="flex flex-col gap-5 mt-5 w-80">
+        <div className="flex flex-col gap-5 mt-5 md:w-80">
           {/* item */}
           {isPending && (
             <>
@@ -55,7 +57,7 @@ const RightPanel = () => {
               >
                 <div className="flex gap-2 items-center">
                   <div className="avatar">
-                    <span className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10">
+                    <span className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-white/10">
                       {user.profilePicture?.length ? (
                         <img src={user.profilePicture} alt="user" />
                       ) : (
@@ -80,9 +82,12 @@ const RightPanel = () => {
                 <div>
                   <button
                     className="btn bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-sm"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      follow(user._id);
+                    }}
                   >
-                    Follow
+                    {isFollowing ? <LoadingSpinner /> : "Follow"}
                   </button>
                 </div>
               </Link>
