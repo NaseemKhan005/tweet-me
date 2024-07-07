@@ -7,12 +7,10 @@ import User from "../models/userModel.js";
 
 export const createNewPost = async (req, res, next) => {
   try {
-    const { title, description } = req.body;
+    const { text } = req.body;
     let { image } = req.body;
 
-    if (!title) return next(createError(400, "Title is required"));
-    if (!description) return next(createError(400, "Description is required"));
-    if (!image) return next(createError(400, "Image is required"));
+    if (!text) return next(createError(400, "Text is required"));
 
     if (image) {
       const uploadResult = await cloudinary.uploader
@@ -26,8 +24,7 @@ export const createNewPost = async (req, res, next) => {
 
     const post = await Post.create({
       user: req.user.userId,
-      title,
-      description,
+      text,
       image,
     });
 

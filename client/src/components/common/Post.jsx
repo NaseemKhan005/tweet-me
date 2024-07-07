@@ -1,13 +1,12 @@
-import { FaRegComment, FaTruckLoading } from "react-icons/fa";
-import { BiRepost } from "react-icons/bi";
-import { FaRegHeart } from "react-icons/fa";
-import { FaRegBookmark } from "react-icons/fa6";
-import { FaTrash } from "react-icons/fa";
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import toast from "react-hot-toast";
+import { BiRepost } from "react-icons/bi";
+import { FaRegComment, FaRegHeart, FaTrash, FaUser } from "react-icons/fa";
+import { FaRegBookmark } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
+import convertDate from "../../utils/convertDate";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -18,7 +17,7 @@ const Post = ({ post }) => {
 
   const isLiked = false;
 
-  const formattedDate = "1h";
+  const { formattedTime } = convertDate(post.createdAt);
 
   const isCommenting = false;
 
@@ -63,9 +62,13 @@ const Post = ({ post }) => {
         <div className="avatar">
           <Link
             to={`/profile/${postOwner.username}`}
-            className="w-8 rounded-full overflow-hidden"
+            className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10"
           >
-            <img src={postOwner.profileImg || "/avatar-placeholder.png"} />
+            {postOwner?.profileImg?.length ? (
+              <img src={postOwner?.profileImg} alt="user" />
+            ) : (
+              <FaUser />
+            )}
           </Link>
         </div>
         <div className="flex flex-col flex-1">
@@ -78,7 +81,11 @@ const Post = ({ post }) => {
                 @{postOwner.username}
               </Link>
               <span>·</span>
-              <span>{formattedDate}</span>
+              <span>
+                {formattedTime < 24
+                  ? `${formattedTime}h`
+                  : `${Math.floor(formattedTime / 24)}d`}
+              </span>
             </span>
             {isMyPost && (
               <span className="flex items-center justify-end flex-1">
@@ -95,9 +102,9 @@ const Post = ({ post }) => {
           </div>
           <div className="flex flex-col gap-3 overflow-hidden">
             <span>{post.text}</span>
-            {post.img && (
+            {post.image && (
               <img
-                src={post.img}
+                src={post.image}
                 className="h-80 object-contain rounded-lg border border-gray-700"
                 alt=""
               />
@@ -134,14 +141,13 @@ const Post = ({ post }) => {
                     {post.comments.map((comment) => (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
-                          <div className="w-8 rounded-full">
-                            <img
-                              src={
-                                comment.user.profileImg ||
-                                "/avatar-placeholder.png"
-                              }
-                            />
-                          </div>
+                          <span className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10">
+                            {postOwner?.profileImg?.length ? (
+                              <img src={comment?.user?.profileImg} alt="user" />
+                            ) : (
+                              <FaUser />
+                            )}
+                          </span>
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-1">
