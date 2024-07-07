@@ -4,32 +4,66 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const NotificationPage = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: "1",
-      from: {
-        _id: "1",
-        username: "johndoe",
-        profileImg: "/avatars/boy2.png",
-      },
-      type: "follow",
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/notifications`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
     },
-    {
-      _id: "2",
-      from: {
-        _id: "2",
-        username: "janedoe",
-        profileImg: "/avatars/girl1.png",
-      },
-      type: "like",
+  });
+
+  const { mutate: deleteAllNotifications, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/notifications`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
     },
-  ];
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications deleted successfully");
+    },
+  });
+
+  // if (isPending) {
+  //   return (
+  //     <div className="flex justify-center h-full items-center">
+  //       <LoadingSpinner size="lg" />
+  //     </div>
+  //   );
+  // }
 
   const deleteNotifications = () => {
-    alert("All notifications deleted");
+    deleteAllNotifications();
   };
 
   return (
@@ -51,33 +85,36 @@ const NotificationPage = () => {
             </ul>
           </div>
         </div>
+
         {isLoading && (
           <div className="flex justify-center h-full items-center">
             <LoadingSpinner size="lg" />
           </div>
         )}
-        {notifications?.length === 0 && (
+
+        {data?.notifications?.length === 0 && (
           <div className="text-center p-4 font-bold">No notifications 🤔</div>
         )}
-        {notifications?.map((notification) => (
+
+        {data?.notifications?.map((notification) => (
           <div className="border-b border-gray-700" key={notification._id}>
-            <div className="flex gap-2 p-4">
+            <div className="flex items-center gap-2 p-4">
               {notification.type === "follow" && (
                 <FaUser className="w-7 h-7 text-primary" />
               )}
+
               {notification.type === "like" && (
                 <FaHeart className="w-7 h-7 text-red-500" />
               )}
               <Link to={`/profile/${notification.from.username}`}>
                 <div className="avatar">
-                  <div className="w-8 rounded-full">
-                    <img
-                      src={
-                        notification.from.profileImg ||
-                        "/avatar-placeholder.png"
-                      }
-                    />
-                  </div>
+                  <span className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10">
+                    {notification?.from.profileImg?.length ? (
+                      <img src={notification.from.profileImg} />
+                    ) : (
+                      <FaUser />
+                    )}
+                  </span>
                 </div>
                 <div className="flex gap-1">
                   <span className="font-bold">
