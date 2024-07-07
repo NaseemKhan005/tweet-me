@@ -1,26 +1,53 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
-import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
+import { FaUser } from "react-icons/fa";
 
 const RightPanel = () => {
-  const isLoading = false;
+  const { data: suggestedUsers, isPending } = useQuery({
+    queryKey: ["suggestedUsers"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/users/suggested`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+        return data.suggestedUsers;
+      } catch (error) {
+        throw error.message;
+      }
+    },
+  });
+
+  console.log(suggestedUsers);
 
   return (
     <div className="hidden lg:block my-4 mx-2 sticky top-4">
       <div className="bg-[#16181C] p-4 rounded-md">
         <p className="font-bold">Who to follow</p>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5 mt-5 w-80">
           {/* item */}
-          {isLoading && (
+          {isPending && (
             <>
+              <RightPanelSkeleton />
+              <RightPanelSkeleton />
+              <RightPanelSkeleton />
+              <RightPanelSkeleton />
               <RightPanelSkeleton />
               <RightPanelSkeleton />
               <RightPanelSkeleton />
               <RightPanelSkeleton />
             </>
           )}
-          {!isLoading &&
-            USERS_FOR_RIGHT_PANEL?.map((user) => (
+
+          {!isPending &&
+            suggestedUsers?.map((user) => (
               <Link
                 to={`/profile/${user.username}`}
                 className="flex items-center justify-between gap-4"
@@ -28,16 +55,25 @@ const RightPanel = () => {
               >
                 <div className="flex gap-2 items-center">
                   <div className="avatar">
-                    <div className="w-8 rounded-full">
-                      <img src={user.profileImg || "/avatar-placeholder.png"} />
-                    </div>
+                    <span className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-white/10">
+                      {user.profilePicture?.length ? (
+                        <img src={user.profilePicture} alt="user" />
+                      ) : (
+                        <FaUser />
+                      )}
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold tracking-tight truncate w-28">
-                      {user.fullName}
+                      {user.fullName?.length > 20
+                        ? `${user.fullName.slice(0, 20)}...`
+                        : user.fullName}
                     </span>
                     <span className="text-sm text-slate-500">
-                      @{user.username}
+                      @
+                      {user.username?.length > 20
+                        ? `${user.username.slice(0, 20)}...`
+                        : user.username}
                     </span>
                   </div>
                 </div>

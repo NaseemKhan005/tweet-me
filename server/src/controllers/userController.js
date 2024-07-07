@@ -26,7 +26,7 @@ export const getSuggestedUsers = async (req, res, next) => {
     const usersFollowedByMe = await User.findById(userId).select("following");
     const suggestedUsers = await User.find({
       _id: { $nin: [...usersFollowedByMe.following, userId] },
-    }).select("username profilePic");
+    }).select("-password");
 
     res
       .status(200)
