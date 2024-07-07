@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import Posts from "../../components/common/Posts";
@@ -7,15 +7,15 @@ import EditProfileModal from "./EditProfileModal";
 
 import { POSTS } from "../../utils/db/dummy";
 
-import { FaArrowLeft } from "react-icons/fa6";
-import { IoCalendarOutline } from "react-icons/io5";
+import { useQuery } from "@tanstack/react-query";
 import { FaLink, FaUser } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa6";
 import { GrGallery } from "react-icons/gr";
+import { IoCalendarOutline } from "react-icons/io5";
 import { MdEdit } from "react-icons/md";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import convertDate from "../../utils/convertDate";
-import useFollow from "../../hooks/useFollow";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useFollow from "../../hooks/useFollow";
+import convertDate from "../../utils/convertDate";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -28,13 +28,11 @@ const ProfilePage = () => {
   const profileImgRef = useRef(null);
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const queryClient = useQueryClient();
 
   const isLoading = false;
   const isMyProfile = authUser?.user?.username === username;
-  // const isMyProfile = true;
 
-  const { data } = useQuery({
+  const { data, refetch, isRefetching } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
       try {
@@ -53,10 +51,11 @@ const ProfilePage = () => {
         throw error.message;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-    },
   });
+
+  useEffect(() => {
+    refetch();
+  }, [username, refetch]);
 
   const { formattedDate } = convertDate(data?.user?.createdAt);
 
@@ -72,19 +71,16 @@ const ProfilePage = () => {
     }
   };
 
-  console.log(data?.user);
-  console.log(authUser.user);
-
   return (
     <>
-      <div className="flex-[4_4_0]  border-r border-gray-700 min-h-screen ">
+      <div className="flex-[4_4_0]  border-r border-gray-700 min-h-screen pb-10">
         {/* HEADER */}
-        {!isLoading && !authUser?.user && (
+        {(!isLoading || !isRefetching) && !authUser?.user && (
           <p className="text-center text-lg mt-4">User not found</p>
         )}
 
         <div className="flex flex-col">
-          {!isLoading && authUser?.user && (
+          {!isLoading && !isRefetching && authUser?.user && (
             <>
               <div className="flex gap-10 px-4 py-2 items-center">
                 <Link to="/">
@@ -258,10 +254,10 @@ const ProfilePage = () => {
                 </div>
                 <div
                   className="flex justify-center flex-1 p-3 text-slate-500 hover:bg-secondary transition duration-300 relative cursor-pointer"
-                  onClick={() => setFeedType("likes")}
+                  onClick={() => setFeedType("liked posts")}
                 >
-                  Likes
-                  {feedType === "likes" && (
+                  Liked Posts
+                  {feedType === "liked posts" && (
                     <div className="absolute bottom-0 w-10  h-1 rounded-full bg-primary" />
                   )}
                 </div>
@@ -270,11 +266,15 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {isLoading ? (
+        {isLoading && isRefetching ? (
           <ProfileHeaderSkeleton />
         ) : (
           <>
-            <Posts />
+            <Posts
+              feedType={feedType}
+              username={data?.user?.username}
+              userId={data?.user?._id}
+            />
           </>
         )}
       </div>

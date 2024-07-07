@@ -5,14 +5,22 @@ import Post from "./Post";
 import PostSkeleton from "../skeletons/PostSkeleton";
 import { useEffect } from "react";
 
-const Posts = ({ feedType }) => {
+const Posts = ({ feedType, username, userId }) => {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
       try {
         const res = await fetch(
           `${import.meta.env.VITE_BASE_URL}/posts/${
-            feedType === "forYou" ? "" : "following"
+            feedType === "forYou"
+              ? ""
+              : feedType === "following"
+              ? "following"
+              : feedType === "posts"
+              ? `user/${username}`
+              : feedType === "liked posts"
+              ? `liked-posts/${userId}`
+              : ""
           }`,
           {
             method: "GET",
