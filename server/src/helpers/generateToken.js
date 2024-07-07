@@ -11,7 +11,7 @@ const generateToken = (userId, res) => {
     httpOnly: true,
     maxAge: 15 * 24 * 60 * 60 * 1000,
     secure: config.env !== "development",
-    sameSite: "strict",
+    sameSite: "none",
   });
 };
 

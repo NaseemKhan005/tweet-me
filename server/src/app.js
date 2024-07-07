@@ -14,7 +14,7 @@ import userRoutes from "./routes/userRoutes.js";
 const app = express();
 
 // Middlewares
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
