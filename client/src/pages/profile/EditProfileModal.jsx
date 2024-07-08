@@ -1,6 +1,10 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import toast from "react-hot-toast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const EditProfileModal = () => {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -14,6 +18,50 @@ const EditProfileModal = () => {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const { mutate: updateProfileMutation, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/users/update`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      document.getElementById("edit_profile_modal").close();
+      setFormData({
+        fullName: "",
+        username: "",
+        email: "",
+        bio: "",
+        link: "",
+        newPassword: "",
+        currentPassword: "",
+      });
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+        queryClient.invalidateQueries({ queryKey: ["user"] }),
+      ]);
+    },
+  });
 
   return (
     <>
@@ -32,7 +80,7 @@ const EditProfileModal = () => {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Profile updated successfully");
+              updateProfileMutation(formData);
             }}
           >
             <div className="flex flex-wrap gap-2">
@@ -97,7 +145,7 @@ const EditProfileModal = () => {
               onChange={handleInputChange}
             />
             <button className="btn btn-primary rounded-full btn-sm text-white">
-              Update
+              {isPending ? <LoadingSpinner size="sm" /> : "Update"}
             </button>
           </form>
         </div>

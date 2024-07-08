@@ -31,7 +31,6 @@ const CreatePost = () => {
           body: JSON.stringify({ text, image: img }),
         });
         const data = await res.json();
-        console.log(data)
 
         if (!res.ok) throw new Error(data.error);
         return data;

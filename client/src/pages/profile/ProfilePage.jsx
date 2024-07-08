@@ -7,7 +7,7 @@ import EditProfileModal from "./EditProfileModal";
 
 import { POSTS } from "../../utils/db/dummy";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { FaLink, FaUser } from "react-icons/fa";
 import { FaArrowLeft } from "react-icons/fa6";
 import { GrGallery } from "react-icons/gr";
@@ -16,6 +16,7 @@ import { MdEdit } from "react-icons/md";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useFollow from "../../hooks/useFollow";
 import convertDate from "../../utils/convertDate";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -50,6 +51,42 @@ const ProfilePage = () => {
       } catch (error) {
         throw error.message;
       }
+    },
+  });
+
+  const { mutate: editProfileMutation, isPending: isUpdating } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_BASE_URL}/users/update`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              coverPicture: coverImg,
+              profilePicture: profileImg,
+            }),
+          }
+        );
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw error.message;
+      }
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setCoverImg(null);
+      setProfileImg(null);
+      refetch();
     },
   });
 
@@ -144,7 +181,7 @@ const ProfilePage = () => {
                 {/* USER AVATAR */}
                 <div className="avatar absolute -bottom-16 left-4">
                   <span className="w-32 aspect-square rounded-full flex items-center justify-center relative group/avatar bg-zinc-900">
-                    {data?.user?.profilePicture?.length ? (
+                    {profileImg || data?.user?.profilePicture ? (
                       <img
                         src={
                           profileImg ||
@@ -155,7 +192,6 @@ const ProfilePage = () => {
                     ) : (
                       <FaUser className="text-7xl text-neutral-300" />
                     )}
-
                     {isMyProfile && (
                       <div className="absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer">
                         <MdEdit
@@ -181,9 +217,7 @@ const ProfilePage = () => {
                   >
                     {isFollowing ? (
                       <LoadingSpinner />
-                    ) : authUser?.user?.isFollowing?.includes(
-                        data?.user?._id
-                      ) ? (
+                    ) : authUser?.user?.following?.includes(data?.user?._id) ? (
                       "Unfollow"
                     ) : (
                       "Follow"
@@ -194,9 +228,9 @@ const ProfilePage = () => {
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={() => editProfileMutation()}
                   >
-                    Update
+                    {isUpdating ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>

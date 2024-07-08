@@ -65,19 +65,20 @@ const Post = ({ post }) => {
         throw error.message;
       }
     },
-    onSuccess: (updatedLikes) => {
-      queryClient.setQueryData(["posts"], (oldData) => {
-        return oldData.map((oldPost) => {
-          if (oldPost._id === post._id) {
-            return { ...oldPost, likes: updatedLikes };
-          }
+    onSuccess: () => {
+      // queryClient.setQueryData(["posts"], (oldData) => {
+      //   return oldData.map((oldPost) => {
+      //     if (oldPost._id === post._id) {
+      //       return { ...oldPost, likes: updatedLikes };
+      //     }
 
-          return oldPost;
-        });
-      });
+      //     return oldPost;
+      //   });
+      // });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(error);
     },
   });
 
