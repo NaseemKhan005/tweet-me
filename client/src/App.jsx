@@ -32,13 +32,13 @@ const App = () => {
     retry: false,
   });
 
-  if (isLoading) {
-    return (
-      <div className="w-screen h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="w-screen h-screen flex items-center justify-center">
+  //       <LoadingSpinner size="lg" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex max-w-6xl mx-auto">
